@@ -26,14 +26,18 @@ var globalTimerPool timerPool
 type timerPool struct {
 	p sync.Pool
 }
-
+const (
+	// issue: sometime the timer had fired. have to disable it.
+	enablePool = false
+)
 // Get returns a timer that completes after the given duration.
 func (tp *timerPool) Get(d time.Duration) *time.Timer {
+	if enablePool {
 	if t, _ := tp.p.Get().(*time.Timer); t != nil {
 		t.Reset(d)
 		return t
 	}
-
+	}
 	return time.NewTimer(d)
 }
 
@@ -51,6 +55,7 @@ func (tp *timerPool) Put(t *time.Timer) {
 		default:
 		}
 	}
-
+	if enablePool {
 	tp.p.Put(t)
+	}
 }
